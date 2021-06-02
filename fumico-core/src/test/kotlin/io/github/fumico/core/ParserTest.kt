@@ -19,5 +19,18 @@ class ParserTest {
             Either.Right(Ast.Root(listOf(Ast.Expression.Literal.IntegerLiteral(BigInteger("10"))))),
             parseRoot(ParseInput("10")).map { it.first },
         )
+        assertEquals(
+            Either.Right(
+                Ast.Root(
+                    listOf(
+                        Ast.Expression.Literal.IntegerLiteral(BigInteger("10")),
+                        Ast.Expression.Literal.IntegerLiteral(BigInteger("20")),
+                        Ast.Expression.Literal.IntegerLiteral(BigInteger("30")),
+                        Ast.Expression.Literal.IntegerLiteral(BigInteger("40")),
+                    )
+                )
+            ),
+            parseRoot(ParseInput("10 20 30 40")).map { it.first },
+        )
     }
 }

@@ -5,10 +5,27 @@ import io.typecraft.fumico.core.lib.parsecom.*
 import java.math.BigInteger
 
 val parseRoot: ParseFunction<Ast.Root> by lazy {
-    mapResult(many(parseExpression)) {
-        Ast.Root(it)
+    mapResult(many(alt(parseExpression, skipHorizontalSpaces, skipVerticalSpaces))) {
+        Ast.Root(it.filterNotNull())
     }
 }
+
+val skipHorizontalSpaces =
+    mapResult(
+        alt(
+            tag(" "),
+            tag("\t"),
+        )
+    ) { null }
+
+val skipVerticalSpaces =
+    mapResult(
+        alt(
+            tag("\r\n"),
+            tag("\n"),
+            tag("\r"),
+        )
+    ) { null }
 
 val parseExpression: ParseFunction<Ast.Expression> by lazy {
     alt(
