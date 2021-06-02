@@ -1,9 +1,6 @@
 package io.typecraft.fumico.core.lib.parsecom
 
-import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.getOrElse
-import arrow.core.getOrHandle
+import arrow.core.*
 
 typealias ParseFunction<T> = (ParseInput) -> ParseResult<T>
 
@@ -63,7 +60,7 @@ fun takeIf(cond: (Char) -> Boolean): ParseFunction<Char> = { input ->
     }
 }
 
-fun takeWhile(cond: (Char) -> Boolean): ParseFunction<CharSequence> = body@{ input ->
+fun takeWhile(cond: (Char) -> Boolean): ParseFunction<String> = body@{ input ->
     val (c, @Suppress("NAME_SHADOWING") input) = takeIf(cond)(input).getOrHandle { return@body ok("", input) }
 
     when (val result = takeWhile(cond)(input)) {
@@ -72,7 +69,7 @@ fun takeWhile(cond: (Char) -> Boolean): ParseFunction<CharSequence> = body@{ inp
     }
 }
 
-fun takeWhile1(cond: (Char) -> Boolean): ParseFunction<CharSequence> = body@{ input ->
+fun takeWhile1(cond: (Char) -> Boolean): ParseFunction<String> = body@{ input ->
     val (c, @Suppress("NAME_SHADOWING") input) = takeIf(cond)(input).getOrHandle { return@body err(ParseError.TakeWhile1) }
 
     takeWhile(cond)(input).map { (s, input) ->
@@ -85,3 +82,47 @@ fun <T, R> mapResult(f: ParseFunction<T>, mapper: (T) -> R): ParseFunction<R> = 
         Pair(mapper(value), input)
     }
 }
+
+fun <T> returning(value: T): ParseFunction<T> = { input -> ok(value, input) }
+
+fun <T> skip(f: ParseFunction<T>): ParseFunction<Nothing?> = mapResult(f) { null }
+
+fun <A, B> tuple(f: ParseFunction<A>, g: ParseFunction<B>): ParseFunction<Pair<A, B>> = body@{ input ->
+    val (a, input1) = f(input).getOrHandle { return@body err(it) }
+    val (b, input2) = g(input1).getOrHandle { return@body err(it) }
+
+    ok(Pair(a, b), input2)
+}
+
+fun <A, B, C> tuple(f: ParseFunction<A>, g: ParseFunction<B>, h: ParseFunction<C>): ParseFunction<Triple<A, B, C>> =
+    body@{ input ->
+        val (a, input1) = f(input).getOrHandle { return@body err(it) }
+        val (b, input2) = g(input1).getOrHandle { return@body err(it) }
+        val (c, input3) = h(input2).getOrHandle { return@body err(it) }
+
+        ok(Triple(a, b, c), input3)
+    }
+
+fun concat(f: ParseFunction<String>, vararg tails: ParseFunction<String>): ParseFunction<String> =
+    mapResult(
+        tuple(
+            f,
+            if (tails.isEmpty()) {
+                returning("")
+            } else {
+                concat(tails[0], *tails.drop(1).toTypedArray())
+            }
+        ),
+    ) {
+        it.first + it.second
+    }
+
+fun <T> delimited(head: ParseFunction<Any?>, body: ParseFunction<T>, tail: ParseFunction<Any?>): ParseFunction<T> =
+    mapResult(
+        tuple(head, body, tail)
+    ) { it.second }
+
+fun <T> preceded(head: ParseFunction<Any?>, body: ParseFunction<T>): ParseFunction<T> =
+    mapResult(
+        tuple(head, body)
+    ) { it.second }

@@ -6,6 +6,12 @@ import java.math.BigInteger
 sealed class Ast {
     data class Root(val children: List<Expression>) : Ast()
 
+    sealed class Definition : Ast() {
+        data class FunctionDefinition(
+            val name: String,
+        ) : Definition()
+    }
+
     sealed class Expression : Ast() {
         sealed class Literal : Expression() {
             data class IntegerLiteral(val value: BigInteger) : Literal()
