@@ -39,6 +39,15 @@ fun <T> many(f: ParseFunction<T>): ParseFunction<List<T>> = { input ->
     }
 }
 
+fun <T> separatedList(f: ParseFunction<T>, sep: ParseFunction<Nothing?>): ParseFunction<List<T>> = { input ->
+    val res = f(input)
+
+    res.map { (value, input) ->
+        val (list, input1) = defaulting(many(preceded(sep, f)), emptyList())(input)
+        Pair(listOf(value) + list, input1)
+    }
+}
+
 fun <T> alt(first: ParseFunction<T>, vararg tails: ParseFunction<T>): ParseFunction<T> = { input ->
     if (tails.isEmpty()) {
         first(input)
@@ -59,6 +68,8 @@ fun takeIf(cond: (Char) -> Boolean): ParseFunction<Char> = { input ->
         }
     }
 }
+
+fun takeUnless(cond: (Char) -> Boolean): ParseFunction<Char> = takeIf { !cond(it) }
 
 fun takeWhile(cond: (Char) -> Boolean): ParseFunction<String> = body@{ input ->
     val (c, @Suppress("NAME_SHADOWING") input) = takeIf(cond)(input).getOrHandle { return@body ok("", input) }
@@ -126,3 +137,15 @@ fun <T> preceded(head: ParseFunction<Any?>, body: ParseFunction<T>): ParseFuncti
     mapResult(
         tuple(head, body)
     ) { it.second }
+
+fun <T : Any?> opt(f: ParseFunction<T>): (ParseInput) -> Pair<T?, ParseInput> = defaulting(f, null)
+
+fun <T : Any?> defaulting(f: ParseFunction<T>, default: T): (ParseInput) -> Pair<T, ParseInput> =
+    body@{ input ->
+        f(input).getOrHandle { return@body Pair(default, input) }
+    }
+
+fun <T : Any?> defaulting(f: ParseFunction<T>, default: () -> T): (ParseInput) -> Pair<T, ParseInput> =
+    body@{ input ->
+        f(input).getOrHandle { return@body Pair(default(), input) }
+    }

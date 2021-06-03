@@ -20,51 +20,89 @@ class ParserTest {
             Either.Right(
                 Ast.Root(
                     listOf(
-                        Ast.Expression.Literal.IntegerLiteral(BigInteger("10")),
-                        Ast.Expression.Literal.IntegerLiteral(BigInteger("20")),
-                        Ast.Expression.Literal.IntegerLiteral(BigInteger("30")),
-                        Ast.Expression.Literal.IntegerLiteral(BigInteger("40")),
+                        Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("10")),
+                        Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("20")),
+                        Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("30")),
+                        Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("40")),
                     )
                 )
             ),
-            parseRoot(ParseInput("""
-                10
-                20
-                30
-                40
-            """)).map { it.first },
+            parseRoot(
+                ParseInput(
+                    """
+                        10
+                        20
+                        30
+                        40
+                    """
+                )
+            ).map { it.first },
         )
         assertEquals(
             Either.Right(
                 Ast.Root(
                     listOf(
-                        Ast.Expression.Literal.DecimalLiteral(BigDecimal("10.0")),
-                        Ast.Expression.Literal.DecimalLiteral(BigDecimal("1e3")),
-                        Ast.Expression.Literal.DecimalLiteral(BigDecimal("1e-8")),
-                        Ast.Expression.Literal.DecimalLiteral(BigDecimal("3.141592")),
+                        Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("10.0")),
+                        Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("1e3")),
+                        Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("1e-8")),
+                        Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("3.141592")),
                     )
                 )
             ),
-            parseRoot(ParseInput("""
-                10.0
-                1e3
-                1e-8
-                3.141592
-            """)).map { it.first },
+            parseRoot(
+                ParseInput(
+                    """
+                        10.0
+                        1e3
+                        1e-8
+                        3.141592
+                    """
+                )
+            ).map { it.first },
         )
         assertEquals(
             Either.Right(
                 Ast.Root(
                     listOf(
-                        Ast.Expression.Literal.StringLiteral("Test"),
-                        Ast.Expression.Literal.StringLiteral("Escape \\ \" \n \r \t"),
+                        Ast.Child.Expression.Literal.StringLiteral("Test"),
+                        Ast.Child.Expression.Literal.StringLiteral("Escape \\ \" \n \r \t"),
                     )
                 )
             ),
-            parseRoot(ParseInput("""
-                "Test"
-                "Escape \\ \" \n \r \t"
-            """.trimIndent())).map { it.first },""
+            parseRoot(
+                ParseInput(
+                    """
+                        "Test"
+                        "Escape \\ \" \n \r \t"
+                    """.trimIndent()
+                )
+            ).map { it.first }, ""
+        )
+        assertEquals(
+            Either.Right(
+                Ast.Root(
+                    listOf(
+                        Ast.Child.Statement.FunctionDeclaration(
+                            "PI",
+                            emptyList(),
+                            Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("3.141592"))
+                        ),
+                        Ast.Child.Statement.FunctionDeclaration(
+                            "test",
+                            listOf("a", "b"),
+                            Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("42"))
+                        ),
+                    )
+                )
+            ),
+            parseRoot(
+                ParseInput(
+                    """
+                        PI = 3.141592
+                        test a b = 42
+                    """.trimIndent()
+                )
+            ).map { it.first }, ""
         )
     }
 }

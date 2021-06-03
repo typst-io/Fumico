@@ -15,6 +15,12 @@ sealed class FumicoType {
         val table: Map<kotlin.String, FumicoType>
     ) : FumicoType()
 
+    data class Function(
+        val name: kotlin.String?,
+        val parameter: FumicoType,
+        val result: FumicoType,
+    ) : FumicoType()
+
     companion object {
         val Unit = Product("()", emptyMap())
     }

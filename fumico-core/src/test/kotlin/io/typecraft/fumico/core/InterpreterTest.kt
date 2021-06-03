@@ -1,8 +1,7 @@
 package io.typecraft.fumico.core
 
 import arrow.core.Either
-import io.typecraft.fumico.core.interpreter.Context
-import io.typecraft.fumico.core.interpreter.visitors.evaluate
+import io.typecraft.fumico.core.evaluator.evaluate
 import io.typecraft.fumico.core.lib.parsecom.ParseInput
 import io.typecraft.fumico.core.parser.parseRoot
 import org.junit.jupiter.api.Test
@@ -21,7 +20,7 @@ class InterpreterTest {
                     FumicoValue.Integer(BigInteger("40"))
                 )
             ),
-            parseRoot(ParseInput("10 20 30 40")).map { Context().evaluate(it.first) }
+            parseRoot(ParseInput("10 20 30 40")).map { FumicoEvaluationContext().evaluate(it.first) }
         )
     }
 }
