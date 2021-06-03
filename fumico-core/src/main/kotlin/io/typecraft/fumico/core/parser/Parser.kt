@@ -93,7 +93,10 @@ val parseStringLiteral: ParseFunction<Ast.Expression.Literal.StringLiteral> by l
                     )
                 ),
                 mapResult(takeIf {
-                    it !in listOf('\"', "\\")
+                    when (it) {
+                        '\"', '\\', '\n' -> false
+                        else -> true
+                    }
                 }) { it.toString() }
             )),
             tag("\"")
