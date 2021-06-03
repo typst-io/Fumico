@@ -36,7 +36,6 @@ subprojects {
 
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
-            useIR = true
             jvmTarget = "11"
         }
     }
