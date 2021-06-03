@@ -1,5 +1,13 @@
-# Fumico
-A script language allows you to do FUnctional MInecraft COding.
+<div align="center">
+    <h1>fumico</h1>
+    <p>
+        A script language allows you to do <u>fu</u>nctional <u>mi</u>necraft <u>co</u>ding.
+    </p>
+    <hr />
+    <img alt="build status" src="https://img.shields.io/github/workflow/status/typecraftio/Fumico/Build?style=for-the-badge" />
+    <img alt="language" src="https://img.shields.io/github/languages/top/typecraftio/Fumico?style=for-the-badge" />
+    <img alt="license" src="https://img.shields.io/github/license/typecraftio/Fumico?style=for-the-badge" />
+</div>
 
 ## 철학
 
