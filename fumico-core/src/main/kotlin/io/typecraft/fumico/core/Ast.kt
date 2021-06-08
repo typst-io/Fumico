@@ -28,7 +28,9 @@ sealed class Ast {
                 data class StringLiteral(val value: String) : Literal()
             }
 
-            sealed class FunctionCall(val function: Expression, val argument: Expression) : Expression()
+            data class Name(val name: String) : Expression()
+
+            data class FunctionCall(val function: Expression, val argument: Expression) : Expression()
         }
     }
 }

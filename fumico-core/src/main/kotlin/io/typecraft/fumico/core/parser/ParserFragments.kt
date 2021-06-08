@@ -5,6 +5,12 @@ import io.typecraft.fumico.core.lib.parsecom.*
 val HORIZONTAL_SPACES = listOf(" ", "\t")
 val VERTICAL_SPACES = listOf("\r\n", "\n", "\r")
 
+val KEYWORDS = listOf(
+    "prefix",
+    "infix",
+    "postfix",
+)
+
 
 val skipHorizontalSpaces =
     skip(
@@ -23,7 +29,7 @@ val skipVerticalSpaces =
     )
 
 val parseIdentifier by lazy {
-    concat(
+    filter(concat(
         mapResult(
             takeIf {
                 when (it.toString()) {
@@ -45,5 +51,7 @@ val parseIdentifier by lazy {
                 else -> true
             }
         })) { it.joinToString("") }
-    )
+    )) {
+        it !in KEYWORDS
+    }
 }

@@ -149,3 +149,13 @@ fun <T : Any?> defaulting(f: ParseFunction<T>, default: () -> T): (ParseInput) -
     body@{ input ->
         f(input).getOrHandle { return@body Pair(default(), input) }
     }
+
+fun <T> filter(f: ParseFunction<T>, filter: (T) -> Boolean): ParseFunction<T> = { input ->
+    f(input).flatMap {
+        if (filter(it.first)) {
+            Either.Right(it)
+        } else {
+            Either.Left(ParseError.Filter)
+        }
+    }
+}

@@ -7,5 +7,7 @@ sealed class ParseError {
     object TakeIf : ParseError()
     object TakeWhile1 : ParseError()
 
+    object Filter : ParseError()
+
     object Unknown : ParseError()
 }

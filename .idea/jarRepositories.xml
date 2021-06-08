@@ -41,5 +41,10 @@
       <option name="name" value="maven2" />
       <option name="url" value="https://jcenter.bintray.com/" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="Google Maven Central" />
+      <option name="name" value="Google Maven Central" />
+      <option name="url" value="https://maven-central.storage.googleapis.com" />
+    </remote-repository>
   </component>
 </project>
