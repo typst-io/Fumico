@@ -11,6 +11,27 @@ val KEYWORDS = listOf(
     "postfix",
 )
 
+val SPECIAL_CHARACTERS = listOf(
+    '!',
+    '#',
+    '$',
+    '%',
+    '&',
+    '*',
+    '+',
+    '-',
+    '.',
+    ':',
+    ';',
+    '<',
+    '=',
+    '>',
+    '?',
+    '@',
+    '^',
+    '~',
+)
+
 
 val skipHorizontalSpaces =
     skip(
@@ -32,11 +53,13 @@ val parseIdentifier by lazy {
     filter(concat(
         mapResult(
             takeIf {
-                when (it.toString()) {
-                    in "0".."9" -> false
-                    in HORIZONTAL_SPACES -> false
-                    in VERTICAL_SPACES -> false
-                    "\"", "=" -> false
+                when {
+                    it in '0'..'9' -> false
+                    it.toString() in HORIZONTAL_SPACES -> false
+                    it.toString() in VERTICAL_SPACES -> false
+                    it in SPECIAL_CHARACTERS -> false
+                    it.toString() == "\"" -> false
+                    it.toString() == "=" -> false
                     else -> true
                 }
             }
@@ -44,14 +67,36 @@ val parseIdentifier by lazy {
             it.toString()
         },
         mapResult(many(takeIf {
-            when (it.toString()) {
-                in HORIZONTAL_SPACES -> false
-                in VERTICAL_SPACES -> false
-                "\"", "=" -> false
+            when {
+                it.toString() in HORIZONTAL_SPACES -> false
+                it.toString() in VERTICAL_SPACES -> false
+                it in SPECIAL_CHARACTERS -> false
+                it.toString() == "\"" -> false
+                it.toString() == "=" -> false
                 else -> true
             }
         })) { it.joinToString("") }
     )) {
         it !in KEYWORDS
     }
+}
+
+val parseSpecialIdentifier by lazy {
+    concat(
+        takeWhile1 {
+            it in SPECIAL_CHARACTERS
+        }
+    )
+}
+
+val parsePrefixOperatorIdentifier by lazy {
+    concat(tag("prefix "), parseSpecialIdentifier)
+}
+
+val parseInfixOperatorIdentifier by lazy {
+    concat(tag("infix "), parseSpecialIdentifier)
+}
+
+val parsePostfixOperatorIdentifier by lazy {
+    concat(tag("postfix "), parseSpecialIdentifier)
 }

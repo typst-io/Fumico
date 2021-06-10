@@ -72,5 +72,18 @@ class InterpreterTest {
         )
         verify { add.execute(any(), FumicoValue.Integer(BigInteger("1"))) }
         verify { addY.execute(any(), FumicoValue.Integer(BigInteger("2"))) }
+        assertEquals(
+            Either.Right(
+                FumicoValue.Integer(BigInteger("1"))
+            ),
+            parseRoot(
+                ParseInput(
+                    """
+                prefix + a = a
+                + + +1
+            """
+                )
+            ).map { FumicoEvaluationContext().evaluate(it.first).last() }
+        )
     }
 }

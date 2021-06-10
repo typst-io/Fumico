@@ -104,5 +104,58 @@ class ParserTest {
                 )
             ).map { it.first }, ""
         )
+
+        assertEquals(
+            Either.Right(
+                Ast.Root(
+                    listOf(
+                        Ast.Child.Statement.FunctionDeclaration(
+                            "prefix ++",
+                            listOf("a"),
+                            Ast.Child.Expression.Name("a")
+                        ),
+                        Ast.Child.Statement.FunctionDeclaration(
+                            "infix &&",
+                            listOf("a", "b"),
+                            Ast.Child.Expression.Name("a")
+                        ),
+                        Ast.Child.Statement.FunctionDeclaration(
+                            "postfix !!",
+                            listOf("a"),
+                            Ast.Child.Expression.Name("a")
+                        ),
+                    )
+                )
+            ),
+            parseRoot(
+                ParseInput(
+                    """
+                        prefix ++ a = a
+                        infix && a b = a
+                        postfix !! a = a
+                    """.trimIndent()
+                )
+            ).map { it.first }
+        )
+
+        assertEquals(
+            Either.Right(
+                Ast.Root(
+                    listOf(
+                        Ast.Child.Expression.FunctionCall(
+                            Ast.Child.Expression.Name("prefix ++"),
+                            Ast.Child.Expression.Name("a"),
+                        ),
+                    )
+                )
+            ),
+            parseRoot(
+                ParseInput(
+                    """
+                        ++a
+                    """.trimIndent()
+                )
+            ).map { it.first }
+        )
     }
 }

@@ -138,6 +138,11 @@ fun <T> preceded(head: ParseFunction<Any?>, body: ParseFunction<T>): ParseFuncti
         tuple(head, body)
     ) { it.second }
 
+fun <A,B> separatedPair(head: ParseFunction<A>, separator: ParseFunction<Any?>, tail: ParseFunction<B>): ParseFunction<Pair<A, B>> =
+    mapResult(
+        tuple(head, separator, tail)
+    ) { Pair(it.first, it.third) }
+
 fun <T : Any?> opt(f: ParseFunction<T>): (ParseInput) -> Pair<T?, ParseInput> = defaulting(f, null)
 
 fun <T : Any?> defaulting(f: ParseFunction<T>, default: T): (ParseInput) -> Pair<T, ParseInput> =
