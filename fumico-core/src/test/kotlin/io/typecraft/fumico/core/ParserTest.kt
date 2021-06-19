@@ -216,18 +216,54 @@ class ParserTest {
     fun `it should parse infix operator`() {
         assertEquals(
             Either.Right(
-                Ast.Child.Expression.FunctionCall(
-                    Ast.Child.Expression.FunctionCall(
-                        Ast.Child.Expression.Name("infix +"),
-                        Ast.Child.Expression.Name("a"),
+                Ast.Root(
+                    listOf(
+                        Ast.Child.Expression.FunctionCall(
+                            Ast.Child.Expression.FunctionCall(
+                                Ast.Child.Expression.Name("infix +"),
+                                Ast.Child.Expression.Name("a"),
+                            ),
+                            Ast.Child.Expression.Name("b"),
+                        ),
                     ),
-                    Ast.Child.Expression.Name("b"),
-                ),
+                )
             ),
-            createInfixOperatorParser(charArrayOf('+'), parsePrefixOperatorExpression)(
+            parseRoot(
                 ParseInput(
                     """
                         a + b
+                    """.trimIndent()
+                )
+            ).map { it.first }
+        )
+    }
+
+    @Test
+    fun `it should parse right associative infix operator`() {
+        assertEquals(
+            Either.Right(
+                Ast.Root(
+                    listOf(
+                        Ast.Child.Expression.FunctionCall(
+                            Ast.Child.Expression.FunctionCall(
+                                Ast.Child.Expression.Name("infix $"),
+                                Ast.Child.Expression.Name("println"),
+                            ),
+                            Ast.Child.Expression.FunctionCall(
+                                Ast.Child.Expression.FunctionCall(
+                                    Ast.Child.Expression.Name("infix +"),
+                                    Ast.Child.Expression.Name("a"),
+                                ),
+                                Ast.Child.Expression.Name("b"),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            parseRoot(
+                ParseInput(
+                    """
+                        println $ a + b
                     """.trimIndent()
                 )
             ).map { it.first }

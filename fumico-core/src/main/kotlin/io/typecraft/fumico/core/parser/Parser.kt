@@ -77,21 +77,24 @@ val parsePostfixOperatorExpression: ParseFunction<Ast.Child.Expression> = body@{
 
 val parseInfixOperatorExpressionWithPrecedence: ParseFunction<Ast.Child.Expression> by lazy {
     createInfixOperatorParser(
-        charArrayOf('|'),
+        charArrayOf('$'),
         createInfixOperatorParser(
-            charArrayOf('^'),
+            charArrayOf('*', '/', '%'),
             createInfixOperatorParser(
-                charArrayOf('&'),
+                charArrayOf('+', '-'),
                 createInfixOperatorParser(
-                    charArrayOf('<', '>'),
+                    charArrayOf(':'),
                     createInfixOperatorParser(
                         charArrayOf('=', '!'),
                         createInfixOperatorParser(
-                            charArrayOf(':'),
+                            charArrayOf('<', '>'),
                             createInfixOperatorParser(
-                                charArrayOf('+', '-'),
+                                charArrayOf('&'),
                                 createInfixOperatorParser(
-                                    charArrayOf('*', '/', '%', '$'), parsePrefixOperatorExpression,
+                                    charArrayOf('^'),
+                                    createInfixOperatorParser(
+                                        charArrayOf('|'), parsePrefixOperatorExpression,
+                                    )
                                 )
                             )
                         )
@@ -135,7 +138,7 @@ fun createInfixOperatorParser(
         }
         val (_, input4) = opt(skipHorizontalSpaces)(input2)
         val (rhs, input5) = if (rightAssociative) {
-            parse(input4, null, rightAssociative)
+            parse(input4, null, rightAssociative).handleErrorWith { child(input4) }
         } else {
             child(input4)
         }.getOrHandle {
