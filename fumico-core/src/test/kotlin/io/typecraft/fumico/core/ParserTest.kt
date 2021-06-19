@@ -3,19 +3,24 @@ package io.typecraft.fumico.core
 import arrow.core.Either
 import io.typecraft.fumico.core.Ast
 import io.typecraft.fumico.core.lib.parsecom.ParseInput
-import io.typecraft.fumico.core.parser.parseRoot
+import io.typecraft.fumico.core.parser.*
 import java.math.BigDecimal
 import java.math.BigInteger
+import javax.swing.JOptionPane
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ParserTest {
     @Test
-    fun `it should be parsed`() {
+    fun `it should parse nothing`() {
         assertEquals(
             Either.Right(Ast.Root(emptyList())),
             parseRoot(ParseInput("")).map { it.first },
         )
+    }
+
+    @Test
+    fun `it should parse integer`() {
         assertEquals(
             Either.Right(
                 Ast.Root(
@@ -38,6 +43,10 @@ class ParserTest {
                 )
             ).map { it.first },
         )
+    }
+
+    @Test
+    fun `it should parse decimal`() {
         assertEquals(
             Either.Right(
                 Ast.Root(
@@ -60,12 +69,19 @@ class ParserTest {
                 )
             ).map { it.first },
         )
+    }
+
+    @Test
+    fun `it should parse string`() {
         assertEquals(
             Either.Right(
                 Ast.Root(
                     listOf(
-                        Ast.Child.Expression.Literal.StringLiteral("Test"),
-                        Ast.Child.Expression.Literal.StringLiteral("Escape \\ \" \n \r \t"),
+                        Ast.Child.Expression.Literal.StringLiteral("Test", "Test"),
+                        Ast.Child.Expression.Literal.StringLiteral(
+                            "Escape \\ \" \n \r \t",
+                            "Escape \\\\ \\\" \\n \\r \\t"
+                        ),
                     )
                 )
             ),
@@ -78,6 +94,10 @@ class ParserTest {
                 )
             ).map { it.first }, ""
         )
+    }
+
+    @Test
+    fun `it should parse function declaration`() {
         assertEquals(
             Either.Right(
                 Ast.Root(
@@ -105,6 +125,10 @@ class ParserTest {
             ).map { it.first }, ""
         )
 
+    }
+
+    @Test
+    fun `it should parse operator declaration`() {
         assertEquals(
             Either.Right(
                 Ast.Root(
@@ -138,6 +162,10 @@ class ParserTest {
             ).map { it.first }
         )
 
+    }
+
+    @Test
+    fun `it should parse prefix operator`() {
         assertEquals(
             Either.Right(
                 Ast.Root(
@@ -153,6 +181,53 @@ class ParserTest {
                 ParseInput(
                     """
                         ++a
+                    """.trimIndent()
+                )
+            ).map { it.first }
+        )
+    }
+
+
+    @Test
+    fun `it should parse postfix operator`() {
+        assertEquals(
+            Either.Right(
+                Ast.Root(
+                    listOf(
+                        Ast.Child.Expression.FunctionCall(
+                            Ast.Child.Expression.Name("postfix !!"),
+                            Ast.Child.Expression.Name("x"),
+                        ),
+                    )
+                )
+            ),
+            parseRoot(
+                ParseInput(
+                    """
+                        x!!
+                    """.trimIndent()
+                )
+            ).map { it.first }
+        )
+
+    }
+
+    @Test
+    fun `it should parse infix operator`() {
+        assertEquals(
+            Either.Right(
+                Ast.Child.Expression.FunctionCall(
+                    Ast.Child.Expression.FunctionCall(
+                        Ast.Child.Expression.Name("infix +"),
+                        Ast.Child.Expression.Name("a"),
+                    ),
+                    Ast.Child.Expression.Name("b"),
+                ),
+            ),
+            createInfixOperatorParser(charArrayOf('+'), parsePrefixOperatorExpression)(
+                ParseInput(
+                    """
+                        a + b
                     """.trimIndent()
                 )
             ).map { it.first }

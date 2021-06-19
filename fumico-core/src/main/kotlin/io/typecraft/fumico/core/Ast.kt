@@ -25,7 +25,7 @@ sealed class Ast {
             sealed class Literal : Expression() {
                 data class IntegerLiteral(val value: BigInteger) : Literal()
                 data class DecimalLiteral(val value: BigDecimal) : Literal()
-                data class StringLiteral(val value: String) : Literal()
+                data class StringLiteral(val value: String, val raw: String) : Literal()
             }
 
             data class Name(val name: String) : Expression()

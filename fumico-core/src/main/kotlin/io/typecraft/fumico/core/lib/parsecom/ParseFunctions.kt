@@ -28,16 +28,19 @@ fun tag(tag: String): ParseFunction<String> = { input ->
     }
 }
 
-fun <T> many(f: ParseFunction<T>): ParseFunction<List<T>> = { input ->
-    val res = f(input)
 
-    res.map { (value, input) ->
-        val (tail, @Suppress("NAME_SHADOWING") input) = many(f)(input).getOrElse { Pair(emptyList(), input) }
-        ok(listOf(value) + tail, input)
-    }.getOrElse {
-        ok(emptyList(), input)
+fun <T> many(f: ParseFunction<T>): ParseFunction<List<T>> {
+    tailrec fun handle(input: ParseInput, acc: List<T>): ParseResult<List<T>> {
+        val (res, input1) = f(input).getOrHandle { return ok(acc, input) }
+        return handle(input1, acc + res)
     }
+    return { input -> handle(input, emptyList()) }
 }
+
+fun <T> many1(f: ParseFunction<T>): ParseFunction<List<T>> = { input ->
+    f(input).flatMap { (first, input1) -> mapResult(many(f)) { listOf(first) + it }(input1) }
+}
+
 
 fun <T> separatedList(f: ParseFunction<T>, sep: ParseFunction<Nothing?>): ParseFunction<List<T>> = { input ->
     val res = f(input)
@@ -138,7 +141,11 @@ fun <T> preceded(head: ParseFunction<Any?>, body: ParseFunction<T>): ParseFuncti
         tuple(head, body)
     ) { it.second }
 
-fun <A,B> separatedPair(head: ParseFunction<A>, separator: ParseFunction<Any?>, tail: ParseFunction<B>): ParseFunction<Pair<A, B>> =
+fun <A, B> separatedPair(
+    head: ParseFunction<A>,
+    separator: ParseFunction<Any?>,
+    tail: ParseFunction<B>
+): ParseFunction<Pair<A, B>> =
     mapResult(
         tuple(head, separator, tail)
     ) { Pair(it.first, it.third) }
@@ -146,14 +153,16 @@ fun <A,B> separatedPair(head: ParseFunction<A>, separator: ParseFunction<Any?>, 
 fun <T : Any?> opt(f: ParseFunction<T>): (ParseInput) -> Pair<T?, ParseInput> = defaulting(f, null)
 
 fun <T : Any?> defaulting(f: ParseFunction<T>, default: T): (ParseInput) -> Pair<T, ParseInput> =
-    body@{ input ->
-        f(input).getOrHandle { return@body Pair(default, input) }
-    }
+    defaulting(f) { default }
 
 fun <T : Any?> defaulting(f: ParseFunction<T>, default: () -> T): (ParseInput) -> Pair<T, ParseInput> =
     body@{ input ->
         f(input).getOrHandle { return@body Pair(default(), input) }
     }
+
+fun <T: Any?> okOf(f: (ParseInput) -> Pair<T, ParseInput>): ParseFunction<T> = { input ->
+    Either.Right(f(input))
+}
 
 fun <T> filter(f: ParseFunction<T>, filter: (T) -> Boolean): ParseFunction<T> = { input ->
     f(input).flatMap {

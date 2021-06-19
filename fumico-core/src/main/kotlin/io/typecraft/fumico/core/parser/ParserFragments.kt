@@ -33,19 +33,34 @@ val SPECIAL_CHARACTERS = listOf(
 )
 
 
+val skipAllSpaces =
+    skip(
+        many(
+            alt(
+                tag(HORIZONTAL_SPACES[0]),
+                *HORIZONTAL_SPACES.drop(1).map(::tag).toTypedArray(),
+                *VERTICAL_SPACES.map(::tag).toTypedArray()
+            )
+        )
+    )
+
 val skipHorizontalSpaces =
     skip(
-        alt(
-            tag(HORIZONTAL_SPACES[0]),
-            *HORIZONTAL_SPACES.drop(1).map(::tag).toTypedArray()
+        many(
+            alt(
+                tag(HORIZONTAL_SPACES[0]),
+                *HORIZONTAL_SPACES.drop(1).map(::tag).toTypedArray()
+            )
         )
     )
 
 val skipVerticalSpaces =
     skip(
-        alt(
-            tag(VERTICAL_SPACES[0]),
-            *VERTICAL_SPACES.drop(1).map(::tag).toTypedArray()
+        many(
+            alt(
+                tag(VERTICAL_SPACES[0]),
+                *VERTICAL_SPACES.drop(1).map(::tag).toTypedArray()
+            )
         )
     )
 

@@ -44,14 +44,14 @@ val parseStringLiteral: ParseFunction<Ast.Child.Expression.Literal.StringLiteral
         delimited(
             tag("\""),
             many(alt(
-                preceded(
+                concat(
                     tag("\\"),
                     alt(
-                        mapResult(tag("\"")) { "\"" },
-                        mapResult(tag("n")) { "\n" },
-                        mapResult(tag("t")) { "\t" },
-                        mapResult(tag("r")) { "\r" },
-                        mapResult(tag("\\")) { "\\" },
+                        tag("\""),
+                        tag("n"),
+                        tag("t"),
+                        tag("r"),
+                        tag("\\"),
                     )
                 ),
                 mapResult(takeIf {
@@ -64,6 +64,18 @@ val parseStringLiteral: ParseFunction<Ast.Child.Expression.Literal.StringLiteral
             tag("\"")
         )
     ) {
-        Ast.Child.Expression.Literal.StringLiteral(it.joinToString(""))
+        Ast.Child.Expression.Literal.StringLiteral(
+            it.joinToString("") { s ->
+                when (s) {
+                    "\\\"" -> "\""
+                    "\\n" -> "\n"
+                    "\\t" -> "\t"
+                    "\\r" -> "\r"
+                    "\\\\" -> "\\"
+                    else -> s
+                }
+            },
+            it.joinToString("")
+        )
     }
 }
