@@ -1,81 +1,36 @@
 package io.typecraft.fumico.core.parser
 
 import io.typecraft.fumico.core.Ast
-import io.typecraft.fumico.core.lib.parsecom.*
-import java.math.BigDecimal
-import java.math.BigInteger
+import io.typecraft.fumico.core.tokenizer.Token
+import io.typecraft.parsecom.functions.alt
+import io.typecraft.parsecom.functions.mapResult
 
-val parseLiteral: ParseFunction<Ast.Child.Expression.Literal> by lazy {
+
+val parseIntegerLiteral =
+    mapResult(
+        token(Token.Kind.LiteralInteger)
+    ) {
+        Ast.Child.Expression.Literal.IntegerLiteral(it)
+    }
+
+val parseDecimalLiteral =
+    mapResult(
+        alt(
+            token(Token.Kind.LiteralDecimal),
+            token(Token.Kind.LiteralDecimalExponent)
+        )
+    ) { Ast.Child.Expression.Literal.DecimalLiteral(it) }
+
+val parseStringLiteral =
+    mapResult(
+        token(Token.Kind.LiteralString)
+    ) {
+        Ast.Child.Expression.Literal.StringLiteral(it)
+    }
+
+val parseLiteral =
     alt(
         parseDecimalLiteral,
         parseIntegerLiteral,
         parseStringLiteral,
     )
-}
-
-val parseIntegerLiteral: ParseFunction<Ast.Child.Expression.Literal.IntegerLiteral> by lazy {
-    mapResult(takeWhile1 { it in '0'..'9' }) {
-        Ast.Child.Expression.Literal.IntegerLiteral(BigInteger(it))
-    }
-}
-
-val parseDecimalLiteral: ParseFunction<Ast.Child.Expression.Literal.DecimalLiteral> by lazy {
-    mapResult(
-        alt(
-            concat(
-                takeWhile1 { it in '0'..'9' },
-                tag("."),
-                takeWhile1 { it in '0'..'9' },
-            ),
-            concat(
-                takeWhile1 { it in '0'..'9' },
-                alt(tag("e"), tag("E")),
-                alt(tag("-"), tag("+"), returning("+")),
-                takeWhile1 { it in '0'..'9' }
-            )
-        )
-    ) {
-        Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal(it))
-    }
-}
-
-val parseStringLiteral: ParseFunction<Ast.Child.Expression.Literal.StringLiteral> by lazy {
-    mapResult(
-        delimited(
-            tag("\""),
-            many(alt(
-                concat(
-                    tag("\\"),
-                    alt(
-                        tag("\""),
-                        tag("n"),
-                        tag("t"),
-                        tag("r"),
-                        tag("\\"),
-                    )
-                ),
-                mapResult(takeIf {
-                    when (it) {
-                        '\"', '\\', '\n' -> false
-                        else -> true
-                    }
-                }) { it.toString() }
-            )),
-            tag("\"")
-        )
-    ) {
-        Ast.Child.Expression.Literal.StringLiteral(
-            it.joinToString("") { s ->
-                when (s) {
-                    "\\\"" -> "\""
-                    "\\n" -> "\n"
-                    "\\t" -> "\t"
-                    "\\r" -> "\r"
-                    "\\\\" -> "\\"
-                    else -> s
-                }
-            },
-            it.joinToString("")
-        )
-    }
-}

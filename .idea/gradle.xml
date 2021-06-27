@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/fumico-bukkit" />
             <option value="$PROJECT_DIR$/fumico-core" />
+            <option value="$PROJECT_DIR$/parsecom" />
           </set>
         </option>
       </GradleProjectSettings>

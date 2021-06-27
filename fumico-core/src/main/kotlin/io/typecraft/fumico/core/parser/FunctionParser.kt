@@ -1,63 +1,76 @@
 package io.typecraft.fumico.core.parser
 
-import arrow.core.getOrHandle
 import io.typecraft.fumico.core.Ast
-import io.typecraft.fumico.core.lib.parsecom.*
+import io.typecraft.fumico.core.tokenizer.Token
+import io.typecraft.parsecom.ParseResult
+import io.typecraft.parsecom.functions.*
 
-val parseFunctionDefinition: ParseFunction<Ast.Child.Definition.FunctionDefinition> = body@{ input ->
-    val (name, input1) = parseIdentifier(input).getOrHandle { return@body err(it) }
+val parseFunctionDefinition: FumicoParseFunction<Ast.Child.Definition.FunctionDefinition> = body@{ input ->
+    val (name, input1) = parseIdentifier(input).unwrapOr { return@body it.into() }
 
-    ok(Ast.Child.Definition.FunctionDefinition(name), input1)
+    ParseResult.Ok(Ast.Child.Definition.FunctionDefinition(name), input1)
 }
 
-val parseFunctionDeclaration: ParseFunction<Ast.Child.Statement.FunctionDeclaration> = body@{ input ->
-    val (name, input1) = parseIdentifier(input).getOrHandle { return@body err(it) }
-    val (_, input2) = opt(skipHorizontalSpaces)(input1)
-    val (arguments, input3) = defaulting(separatedList(parseIdentifier, skipHorizontalSpaces), emptyList())(input2)
-    val (body, input7) = parseFunctionTail(input3).getOrHandle { return@body err(it) }
-
-    ok(Ast.Child.Statement.FunctionDeclaration(name, arguments, body), input7)
-}
-
-val parsePrefixOperatorFunctionDeclaration: ParseFunction<Ast.Child.Statement.FunctionDeclaration> = body@{ input ->
-    val (name, input1) = parsePrefixOperatorIdentifier(input).getOrHandle { return@body err(it) }
-    val (_, input2) = opt(skipHorizontalSpaces)(input1)
-    val (arguments, input3) = mapResult(parseIdentifier) { listOf(it) }(input2).getOrHandle { return@body err(it) }
-    val (body, input7) = parseFunctionTail(input3).getOrHandle { return@body err(it) }
-
-    ok(Ast.Child.Statement.FunctionDeclaration(name, arguments, body), input7)
-}
-
-
-val parseInfixOperatorFunctionDeclaration: ParseFunction<Ast.Child.Statement.FunctionDeclaration> = body@{ input ->
-    val (name, input1) = parseInfixOperatorIdentifier(input).getOrHandle { return@body err(it) }
-    val (_, input2) = opt(skipHorizontalSpaces)(input1)
-    val (arguments, input3) = mapResult(
-        separatedPair(
+val parseFunctionDeclaration: FumicoParseFunction<Ast.Child.Statement.FunctionDeclaration> by lazy {
+    mapResult(
+        tuple(
             parseIdentifier,
-            skipHorizontalSpaces,
-            parseIdentifier
+            defaulting(
+                many(preceded(skipHorizontalSpaces, parseIdentifier)),
+                emptyList()
+            ),
+            parseFunctionTail,
         )
-    ) { it.toList() }(input2).getOrHandle { return@body err(it) }
-    val (body, input7) = parseFunctionTail(input3).getOrHandle { return@body err(it) }
-
-    ok(Ast.Child.Statement.FunctionDeclaration(name, arguments, body), input7)
+    ) { (name, arguments, body) ->
+        Ast.Child.Statement.FunctionDeclaration(name, arguments, body)
+    }
 }
 
-val parsePostfixOperatorFunctionDeclaration: ParseFunction<Ast.Child.Statement.FunctionDeclaration> = body@{ input ->
-    val (name, input1) = parsePostfixOperatorIdentifier(input).getOrHandle { return@body err(it) }
-    val (_, input2) = opt(skipHorizontalSpaces)(input1)
-    val (arguments, input3) = mapResult(parseIdentifier) { listOf(it) }(input2).getOrHandle { return@body err(it) }
-    val (body, input7) = parseFunctionTail(input3).getOrHandle { return@body err(it) }
-
-    ok(Ast.Child.Statement.FunctionDeclaration(name, arguments, body), input7)
+val parsePrefixOperatorFunctionDeclaration: FumicoParseFunction<Ast.Child.Statement.FunctionDeclaration> by lazy {
+    mapResult(
+        tuple(
+            parsePrefixOperatorIdentifier,
+            preceded(skipHorizontalSpaces, parseIdentifier),
+            parseFunctionTail,
+        )
+    ) { (name, argument, body) ->
+        Ast.Child.Statement.FunctionDeclaration(name, listOf(argument), body)
+    }
 }
 
-val parseFunctionTail: ParseFunction<Ast.Child.Expression> = body@{ input ->
-    val (_, input1) = opt(skipHorizontalSpaces)(input)
-    val (_, input2) = tag("=")(input1).getOrHandle { return@body err(it) }
-    val (_, input3) = opt(skipHorizontalSpaces)(input2)
-    val (body, input4) = parseExpression(input3).getOrHandle { return@body err(it) }
+val parseInfixOperatorFunctionDeclaration: FumicoParseFunction<Ast.Child.Statement.FunctionDeclaration> by lazy {
+    mapResult(
+        tuple(
+            parseInfixOperatorIdentifier,
+            preceded(skipHorizontalSpaces, separatedPair(parseIdentifier, skipHorizontalSpaces, parseIdentifier)),
+            parseFunctionTail,
+        )
+    ) { (name, arguments, body) ->
+        Ast.Child.Statement.FunctionDeclaration(name, arguments.toList(), body)
+    }
+}
 
-    ok(body, input4)
+val parsePostfixOperatorFunctionDeclaration: FumicoParseFunction<Ast.Child.Statement.FunctionDeclaration> by lazy {
+    mapResult(
+        tuple(
+            parsePostfixOperatorIdentifier,
+            preceded(skipHorizontalSpaces, parseIdentifier),
+            parseFunctionTail,
+        )
+    ) { (name, argument, body) ->
+        Ast.Child.Statement.FunctionDeclaration(name, listOf(argument), body)
+    }
+}
+
+val parseFunctionTail: FumicoParseFunction<Ast.Child.Expression> by lazy {
+    mapResult(
+        tuple(
+            skipHorizontalSpaces,
+            token(Token.Kind.PunctuationEqualsSign),
+            skipHorizontalSpaces,
+            ::parseExpression,
+        )
+    ) {
+        it.fourth
+    }
 }

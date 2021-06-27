@@ -1,7 +1,8 @@
 version = "0.1.0-SNAPSHOT"
 
 dependencies {
-    implementation("io.arrow-kt", "arrow-core", "0.13.2")
+    implementation(project(":parsecom"))
+
     testImplementation("io.mockk", "mockk", "1.11.0")
 }
 

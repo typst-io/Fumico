@@ -9,10 +9,10 @@ import java.io.File
 // This class automatically loaded by Bukkit
 @Suppress("unused")
 @SpigotPlugin
-class MwmPlugin : JavaPlugin {
+class FumicoPlugin : JavaPlugin {
     companion object {
         val INSTANCE by lazy {
-            getPlugin(MwmPlugin::class.java)
+            getPlugin(FumicoPlugin::class.java)
         }
     }
 
@@ -21,8 +21,8 @@ class MwmPlugin : JavaPlugin {
     constructor() : super()
 
     // For the MockBukkit
-    @Suppress("unused", "ProtectedInFinal")
-    protected constructor(
+    @Suppress("unused")
+    constructor(
         loader: JavaPluginLoader,
         description: PluginDescriptionFile,
         dataFolder: File,

@@ -1,11 +1,10 @@
 package io.typecraft.fumico.core.parser
 
 import io.typecraft.fumico.core.Ast
-import io.typecraft.fumico.core.lib.parsecom.ParseFunction
-import io.typecraft.fumico.core.lib.parsecom.alt
-import io.typecraft.fumico.core.lib.parsecom.mapResult
+import io.typecraft.parsecom.functions.alt
+import io.typecraft.parsecom.functions.mapResult
 
-val parseName: ParseFunction<Ast.Child.Expression.Name> by lazy {
+val parseName by lazy {
     mapResult(
         alt(
             parseIdentifier,

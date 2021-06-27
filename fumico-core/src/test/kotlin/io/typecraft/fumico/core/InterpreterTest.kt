@@ -1,38 +1,50 @@
 package io.typecraft.fumico.core
 
-import arrow.core.Either
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.typecraft.fumico.core.evaluator.evaluate
-import io.typecraft.fumico.core.lib.parsecom.ParseInput
+import io.typecraft.fumico.core.parser.FumicoParseInput
 import io.typecraft.fumico.core.parser.parseRoot
+import io.typecraft.fumico.core.tokenizer.FumicoTokenizeInput
+import io.typecraft.fumico.core.tokenizer.FumicoTokenizerMeta
+import io.typecraft.fumico.core.tokenizer.tokenize
 import org.junit.jupiter.api.Test
 import java.math.BigInteger
 import kotlin.test.assertEquals
+
+fun interpretSimple(src: String, context: FumicoEvaluationContext = FumicoEvaluationContext()): List<FumicoValue>? =
+    tokenize(
+        FumicoTokenizeInput(src.toList(), FumicoTokenizerMeta())
+    ).flatMap {
+        parseRoot(FumicoParseInput(it.value, Unit))
+    }.unwrapOrNull()
+        ?.value
+        ?.children
+        ?.fold(emptyList<FumicoEvaluated>()) { acc, curr ->
+            val ctx = acc.firstOrNull()?.first ?: context
+            acc + ctx.evaluate(curr)
+        }
+        ?.map { it.second }
 
 class InterpreterTest {
     @Test
     fun `it should interpret number`() {
         assertEquals(
-            Either.Right(
-                listOf(
-                    FumicoValue.Integer(BigInteger("10")),
-                    FumicoValue.Integer(BigInteger("20")),
-                    FumicoValue.Integer(BigInteger("30")),
-                    FumicoValue.Integer(BigInteger("40"))
-                )
+            listOf(
+                FumicoValue.Integer(BigInteger("10")),
+                FumicoValue.Integer(BigInteger("20")),
+                FumicoValue.Integer(BigInteger("30")),
+                FumicoValue.Integer(BigInteger("40"))
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                10
-                20
-                30
-                40
-            """
-                )
-            ).map { FumicoEvaluationContext().evaluate(it.first) }
+            interpretSimple(
+                """
+                    10
+                    20
+                    30
+                    40
+                """.trimIndent()
+            )
         )
     }
 
@@ -41,16 +53,15 @@ class InterpreterTest {
         val inc = mockk<FumicoValue.Function>()
         every { inc.execute(any(), FumicoValue.Integer(BigInteger("1"))) } returns FumicoValue.Integer(BigInteger("2"))
         assertEquals(
-            Either.Right(
+            listOf(
                 FumicoValue.Integer(BigInteger("2"))
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                inc 1
-            """
-                )
-            ).map { FumicoEvaluationContext().withBinding("inc", inc).evaluate(it.first).last() }
+            interpretSimple(
+                """
+                    inc 1
+                """.trimIndent(),
+                FumicoEvaluationContext().withBinding("inc", inc)
+            )
         )
         verify { inc.execute(any(), FumicoValue.Integer(BigInteger("1"))) }
 
@@ -63,17 +74,14 @@ class InterpreterTest {
         every { add.execute(any(), FumicoValue.Integer(BigInteger("1"))) } returns addY
         every { addY.execute(any(), FumicoValue.Integer(BigInteger("2"))) } returns FumicoValue.Integer(BigInteger("3"))
         assertEquals(
-            Either.Right(
-                FumicoValue.Integer(BigInteger("3"))
-            ),
-            parseRoot(
-                ParseInput(
-                    """
-                inc a = add 1 a
-                inc 2
-            """
-                )
-            ).map { FumicoEvaluationContext().withBinding("add", add).evaluate(it.first).last() }
+            FumicoValue.Integer(BigInteger("3")),
+            interpretSimple(
+                """
+                    inc a = add 1 a
+                    inc 2
+                """.trimIndent(),
+                FumicoEvaluationContext().withBinding("add", add)
+            )?.lastOrNull()
         )
         verify { add.execute(any(), FumicoValue.Integer(BigInteger("1"))) }
         verify { addY.execute(any(), FumicoValue.Integer(BigInteger("2"))) }
@@ -82,17 +90,13 @@ class InterpreterTest {
     @Test
     fun `it should interpret prefix operator`() {
         assertEquals(
-            Either.Right(
-                FumicoValue.Integer(BigInteger("1"))
-            ),
-            parseRoot(
-                ParseInput(
-                    """
-                prefix + a = a
-                + + +1
-            """
-                )
-            ).map { FumicoEvaluationContext().evaluate(it.first).last() }
+            FumicoValue.Integer(BigInteger("1")),
+            interpretSimple(
+                """
+                    prefix + a = a
+                    + + +1
+                """.trimIndent()
+            )?.lastOrNull()
         )
 
     }
@@ -100,17 +104,13 @@ class InterpreterTest {
     @Test
     fun `it should interpret postfix operator`() {
         assertEquals(
-            Either.Right(
-                FumicoValue.Integer(BigInteger("1"))
-            ),
-            parseRoot(
-                ParseInput(
-                    """
-                postfix !! a = a
-                1!! !! !!
-            """
-                )
-            ).map { FumicoEvaluationContext().evaluate(it.first).last() }
+            FumicoValue.Integer(BigInteger("1")),
+            interpretSimple(
+                """
+                    postfix !! a = a
+                    1!! !! !!
+                """.trimIndent()
+            )?.lastOrNull()
         )
     }
 
@@ -121,18 +121,41 @@ class InterpreterTest {
         every { add.execute(any(), FumicoValue.Integer(BigInteger("1"))) } returns addY
         every { addY.execute(any(), FumicoValue.Integer(BigInteger("2"))) } returns FumicoValue.Integer(BigInteger("3"))
         assertEquals(
-            Either.Right(
-                FumicoValue.Integer(BigInteger("3"))
-            ),
-            parseRoot(
-                ParseInput(
-                    """
-                1 + 2
-            """
-                )
-            ).map { FumicoEvaluationContext().withBinding("infix +", add).evaluate(it.first).last() }
+
+            FumicoValue.Integer(BigInteger("3")),
+            interpretSimple(
+                """
+                    1 + 2
+                """.trimIndent(),
+                FumicoEvaluationContext().withBinding("infix +", add)
+            )?.lastOrNull()
         )
         verify { add.execute(any(), FumicoValue.Integer(BigInteger("1"))) }
         verify { addY.execute(any(), FumicoValue.Integer(BigInteger("2"))) }
+    }
+
+    @Test
+    fun `it should interpret tuple`() {
+        assertEquals(
+            FumicoValue.Tuple(
+                listOf(
+                    FumicoValue.Tuple(
+                        listOf(
+                            FumicoValue.Integer(BigInteger("1")),
+                            FumicoValue.Integer(BigInteger("2")),
+                            FumicoValue.Integer(BigInteger("3"))
+                        )
+                    ),
+                    FumicoValue.Integer(BigInteger("4")),
+                    FumicoValue.Unit,
+                )
+
+            ),
+            interpretSimple(
+                """
+                    ((1, 2, 3), (4), ())
+                """.trimIndent()
+            )?.lastOrNull()
+        )
     }
 }

@@ -1,117 +1,59 @@
 package io.typecraft.fumico.core.parser
 
-import io.typecraft.fumico.core.lib.parsecom.*
+import io.typecraft.fumico.core.tokenizer.Token
+import io.typecraft.parsecom.functions.*
 
-val HORIZONTAL_SPACES = listOf(" ", "\t")
-val VERTICAL_SPACES = listOf("\r\n", "\n", "\r")
+val skipVerticalSpaces = opt(many(token(Token.Kind.SpaceVertical)))
 
-val KEYWORDS = listOf(
-    "prefix",
-    "infix",
-    "postfix",
-)
-
-val SPECIAL_CHARACTERS = listOf(
-    '!',
-    '#',
-    '$',
-    '%',
-    '&',
-    '*',
-    '+',
-    '-',
-    '.',
-    ':',
-    ';',
-    '<',
-    '=',
-    '>',
-    '?',
-    '@',
-    '^',
-    '~',
-)
-
+val skipHorizontalSpaces = opt(many(token(Token.Kind.SpaceHorizontal)))
 
 val skipAllSpaces =
-    skip(
+    opt(
         many(
-            alt(
-                tag(HORIZONTAL_SPACES[0]),
-                *HORIZONTAL_SPACES.drop(1).map(::tag).toTypedArray(),
-                *VERTICAL_SPACES.map(::tag).toTypedArray()
-            )
+            alt(token(Token.Kind.SpaceVertical), token(Token.Kind.SpaceHorizontal))
         )
     )
 
-val skipHorizontalSpaces =
-    skip(
-        many(
-            alt(
-                tag(HORIZONTAL_SPACES[0]),
-                *HORIZONTAL_SPACES.drop(1).map(::tag).toTypedArray()
-            )
-        )
-    )
 
-val skipVerticalSpaces =
-    skip(
-        many(
-            alt(
-                tag(VERTICAL_SPACES[0]),
-                *VERTICAL_SPACES.drop(1).map(::tag).toTypedArray()
-            )
-        )
-    )
+val parseIdentifier = token(Token.Kind.IdentifierIdentifier)
 
-val parseIdentifier by lazy {
-    filter(concat(
-        mapResult(
-            takeIf {
-                when {
-                    it in '0'..'9' -> false
-                    it.toString() in HORIZONTAL_SPACES -> false
-                    it.toString() in VERTICAL_SPACES -> false
-                    it in SPECIAL_CHARACTERS -> false
-                    it.toString() == "\"" -> false
-                    it.toString() == "=" -> false
-                    else -> true
-                }
-            }
-        ) {
-            it.toString()
-        },
-        mapResult(many(takeIf {
-            when {
-                it.toString() in HORIZONTAL_SPACES -> false
-                it.toString() in VERTICAL_SPACES -> false
-                it in SPECIAL_CHARACTERS -> false
-                it.toString() == "\"" -> false
-                it.toString() == "=" -> false
-                else -> true
-            }
-        })) { it.joinToString("") }
-    )) {
-        it !in KEYWORDS
+val parseSpecialIdentifier: FumicoParseFunction<Token> = mapResult(takeWhile1 {
+    when (it.kind) {
+        Token.Kind.PunctuationExclamationMark,
+        Token.Kind.PunctuationNumberSign,
+        Token.Kind.PunctuationDollarSign,
+        Token.Kind.PunctuationPercentSign,
+        Token.Kind.PunctuationAmpersand,
+        Token.Kind.PunctuationAsterisk,
+        Token.Kind.PunctuationPlusSign,
+        Token.Kind.PunctuationHyphenMinus,
+        Token.Kind.PunctuationFullStop,
+        Token.Kind.PunctuationSolidus,
+        Token.Kind.PunctuationColon,
+        Token.Kind.PunctuationSemicolon,
+        Token.Kind.PunctuationLessThanSign,
+        Token.Kind.PunctuationEqualsSign,
+        Token.Kind.PunctuationGreaterThanSign,
+        Token.Kind.PunctuationQuestionMark,
+        Token.Kind.PunctuationCommercialAt,
+        Token.Kind.PunctuationReverseSolidus,
+        Token.Kind.PunctuationCircumflexAccent,
+        Token.Kind.PunctuationVerticalLine,
+        Token.Kind.PunctuationTilde,
+        Token.Kind.PunctuationLeftSquareBracket,
+        Token.Kind.PunctuationLeftCurlyBracket,
+        Token.Kind.PunctuationRightSquareBracket,
+        Token.Kind.PunctuationRightCurlyBracket -> true
+        else -> false
+    }
+}) {
+    it.reduce { l, r ->
+        l.mergeWith(Token.Kind.Punctuations, r)
     }
 }
 
-val parseSpecialIdentifier by lazy {
-    concat(
-        takeWhile1 {
-            it in SPECIAL_CHARACTERS
-        }
-    )
-}
+val parsePrefixOperatorIdentifier = token(Token.Kind.IdentifierPrefix)
 
-val parsePrefixOperatorIdentifier by lazy {
-    concat(tag("prefix "), parseSpecialIdentifier)
-}
+val parseInfixOperatorIdentifier = token(Token.Kind.IdentifierInfix)
 
-val parseInfixOperatorIdentifier by lazy {
-    concat(tag("infix "), parseSpecialIdentifier)
-}
-
-val parsePostfixOperatorIdentifier by lazy {
-    concat(tag("postfix "), parseSpecialIdentifier)
-}
+val parsePostfixOperatorIdentifier = token(Token.Kind.IdentifierPostfix)

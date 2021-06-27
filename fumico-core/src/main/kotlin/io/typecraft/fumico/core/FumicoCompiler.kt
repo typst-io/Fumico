@@ -1,4 +1,3 @@
 package io.typecraft.fumico.core
 
-data class FumicoCompiler(val source: String) {
-}
+data class FumicoCompiler(val source: String)

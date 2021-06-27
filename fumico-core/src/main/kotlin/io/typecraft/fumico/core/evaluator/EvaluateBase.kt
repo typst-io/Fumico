@@ -28,4 +28,5 @@ fun FumicoEvaluationContext.evaluate(node: Ast.Child.Expression): FumicoEvaluate
     is Ast.Child.Expression.Literal -> evaluate(node)
     is Ast.Child.Expression.FunctionCall -> evaluate(node)
     is Ast.Child.Expression.Name -> evaluate(node)
+    is Ast.Child.Expression.Tuple -> evaluate(node)
 }

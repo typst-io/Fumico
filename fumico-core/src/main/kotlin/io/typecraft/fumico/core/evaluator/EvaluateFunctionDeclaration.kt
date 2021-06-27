@@ -5,11 +5,8 @@ import io.typecraft.fumico.core.FumicoEvaluated
 import io.typecraft.fumico.core.FumicoEvaluationContext
 import io.typecraft.fumico.core.FumicoValue
 
-// TODO: Haskell스러운 인자 패턴 매칭을 구현해봐야 함
-
-
 fun FumicoEvaluationContext.evaluate(node: Ast.Child.Statement.FunctionDeclaration): FumicoEvaluated {
-    val function = node.arguments.ifEmpty { listOf("_") }.foldIndexed(
+    val function = node.arguments.map { it.actual }.ifEmpty { listOf("_") }.foldIndexed(
         FumicoValue.Function("${node.name}_lambda_last") { context, _ ->
             val context1 = if (node.arguments.isEmpty()) {
                 this
@@ -30,7 +27,7 @@ fun FumicoEvaluationContext.evaluate(node: Ast.Child.Statement.FunctionDeclarati
     }
 
     val context1 = this.withBinding(
-        node.name, function
+        node.name.actual, function
     )
 
     return Pair(context1, FumicoValue.Unit)

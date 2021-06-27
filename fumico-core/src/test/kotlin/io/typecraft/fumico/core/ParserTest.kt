@@ -1,128 +1,134 @@
 package io.typecraft.fumico.core
 
-import arrow.core.Either
-import io.typecraft.fumico.core.Ast
-import io.typecraft.fumico.core.lib.parsecom.ParseInput
 import io.typecraft.fumico.core.parser.*
-import java.math.BigDecimal
-import java.math.BigInteger
-import javax.swing.JOptionPane
+import io.typecraft.fumico.core.tokenizer.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+
+fun parseSimple(src: String): List<Ast.Child>? =
+    tokenize(FumicoTokenizeInput(src.toList(), meta = FumicoTokenizerMeta())).flatMap {
+        parseRoot(FumicoParseInput(it.value, meta = Unit))
+    }.unwrapOrNull()?.value?.children
+
+fun integerNode(value: String): Ast.Child.Expression.Literal.IntegerLiteral =
+    Ast.Child.Expression.Literal.IntegerLiteral(Token.Kind.LiteralInteger(value))
+
+fun decimalNode(value: String): Ast.Child.Expression.Literal.DecimalLiteral =
+    Ast.Child.Expression.Literal.DecimalLiteral(Token.Kind.LiteralDecimal(value))
+
+fun decimalExponentNode(value: String): Ast.Child.Expression.Literal.DecimalLiteral =
+    Ast.Child.Expression.Literal.DecimalLiteral(Token.Kind.LiteralDecimalExponent(value))
+
+fun stringNode(value: String): Ast.Child.Expression.Literal.StringLiteral =
+    Ast.Child.Expression.Literal.StringLiteral(Token.Kind.LiteralString(value))
+
+fun identNameNode(name: String): Ast.Child.Expression.Name =
+    Ast.Child.Expression.Name(Token.Kind.IdentifierIdentifier(name))
+
+fun prefixNameNode(name: String): Ast.Child.Expression.Name =
+    Ast.Child.Expression.Name(Token.Kind.IdentifierPrefix(name))
+fun infixNameNode(name: String): Ast.Child.Expression.Name =
+    Ast.Child.Expression.Name(Token.Kind.IdentifierInfix(name))
+fun postfixNameNode(name: String): Ast.Child.Expression.Name =
+    Ast.Child.Expression.Name(Token.Kind.IdentifierPostfix(name))
+
+fun functionDeclarationNode(
+    name: Token,
+    arguments: List<String>,
+    body: Ast.Child.Expression
+): Ast.Child.Statement.FunctionDeclaration =
+    Ast.Child.Statement.FunctionDeclaration(
+        name,
+        arguments.map { Token.Kind.IdentifierIdentifier(it) },
+        body
+    )
 
 class ParserTest {
     @Test
     fun `it should parse nothing`() {
         assertEquals(
-            Either.Right(Ast.Root(emptyList())),
-            parseRoot(ParseInput("")).map { it.first },
+            emptyList(),
+            parseSimple(""),
         )
     }
 
     @Test
     fun `it should parse integer`() {
         assertEquals(
-            Either.Right(
-                Ast.Root(
-                    listOf(
-                        Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("10")),
-                        Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("20")),
-                        Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("30")),
-                        Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("40")),
-                    )
-                )
+            listOf(
+                integerNode("10"),
+                integerNode("20"),
+                integerNode("30"),
+                integerNode("40"),
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                        10
-                        20
-                        30
-                        40
-                    """
-                )
-            ).map { it.first },
+            parseSimple(
+                """
+                    10
+                    20
+                    30
+                    40
+                """.trimIndent()
+            ),
         )
     }
 
     @Test
     fun `it should parse decimal`() {
         assertEquals(
-            Either.Right(
-                Ast.Root(
-                    listOf(
-                        Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("10.0")),
-                        Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("1e3")),
-                        Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("1e-8")),
-                        Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("3.141592")),
-                    )
-                )
+            listOf(
+                decimalNode("10.0"),
+                decimalExponentNode("1.0e3"),
+                decimalExponentNode("1e-8"),
+                decimalNode("3.141592"),
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                        10.0
-                        1e3
-                        1e-8
-                        3.141592
-                    """
-                )
-            ).map { it.first },
+            parseSimple(
+                """
+                    10.0
+                    1.0e3
+                    1e-8
+                    3.141592
+                """.trimIndent()
+            ),
         )
     }
 
     @Test
     fun `it should parse string`() {
         assertEquals(
-            Either.Right(
-                Ast.Root(
-                    listOf(
-                        Ast.Child.Expression.Literal.StringLiteral("Test", "Test"),
-                        Ast.Child.Expression.Literal.StringLiteral(
-                            "Escape \\ \" \n \r \t",
-                            "Escape \\\\ \\\" \\n \\r \\t"
-                        ),
-                    )
-                )
+            listOf(
+                stringNode(""""Test""""),
+                stringNode(""""Escape \\ \" \n \r \t""""),
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                        "Test"
-                        "Escape \\ \" \n \r \t"
-                    """.trimIndent()
-                )
-            ).map { it.first }, ""
+            parseSimple(
+                """
+                    "Test"
+                    "Escape \\ \" \n \r \t"
+                """.trimIndent()
+            )
         )
     }
 
     @Test
     fun `it should parse function declaration`() {
         assertEquals(
-            Either.Right(
-                Ast.Root(
-                    listOf(
-                        Ast.Child.Statement.FunctionDeclaration(
-                            "PI",
-                            emptyList(),
-                            Ast.Child.Expression.Literal.DecimalLiteral(BigDecimal("3.141592"))
-                        ),
-                        Ast.Child.Statement.FunctionDeclaration(
-                            "test",
-                            listOf("a", "b"),
-                            Ast.Child.Expression.Literal.IntegerLiteral(BigInteger("42"))
-                        ),
-                    )
-                )
+            listOf(
+                functionDeclarationNode(
+                    Token.Kind.IdentifierIdentifier("PI"),
+                    emptyList(),
+                    decimalNode("3.141592")
+                ),
+                functionDeclarationNode(
+                    Token.Kind.IdentifierIdentifier("test"),
+                    listOf("a", "b"),
+                    integerNode("42")
+                ),
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                        PI = 3.141592
-                        test a b = 42
-                    """.trimIndent()
-                )
-            ).map { it.first }, ""
+            parseSimple(
+                """
+                    PI = 3.141592
+                    test a b = 42
+                """.trimIndent()
+            )
         )
 
     }
@@ -130,36 +136,30 @@ class ParserTest {
     @Test
     fun `it should parse operator declaration`() {
         assertEquals(
-            Either.Right(
-                Ast.Root(
-                    listOf(
-                        Ast.Child.Statement.FunctionDeclaration(
-                            "prefix ++",
-                            listOf("a"),
-                            Ast.Child.Expression.Name("a")
-                        ),
-                        Ast.Child.Statement.FunctionDeclaration(
-                            "infix &&",
-                            listOf("a", "b"),
-                            Ast.Child.Expression.Name("a")
-                        ),
-                        Ast.Child.Statement.FunctionDeclaration(
-                            "postfix !!",
-                            listOf("a"),
-                            Ast.Child.Expression.Name("a")
-                        ),
-                    )
-                )
+            listOf(
+                functionDeclarationNode(
+                    Token.Kind.IdentifierPrefix("prefix ++"),
+                    listOf("a"),
+                    identNameNode("a")
+                ),
+                functionDeclarationNode(
+                    Token.Kind.IdentifierInfix("infix &&"),
+                    listOf("a", "b"),
+                    identNameNode("a")
+                ),
+                functionDeclarationNode(
+                    Token.Kind.IdentifierPostfix("postfix !!"),
+                    listOf("a"),
+                    identNameNode("a")
+                ),
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                        prefix ++ a = a
-                        infix && a b = a
-                        postfix !! a = a
-                    """.trimIndent()
-                )
-            ).map { it.first }
+            parseSimple(
+                """
+                    prefix ++ a = a
+                    infix && a b = a
+                    postfix !! a = a
+                """.trimIndent()
+            )
         )
 
     }
@@ -167,23 +167,17 @@ class ParserTest {
     @Test
     fun `it should parse prefix operator`() {
         assertEquals(
-            Either.Right(
-                Ast.Root(
-                    listOf(
-                        Ast.Child.Expression.FunctionCall(
-                            Ast.Child.Expression.Name("prefix ++"),
-                            Ast.Child.Expression.Name("a"),
-                        ),
-                    )
-                )
+            listOf(
+                Ast.Child.Expression.FunctionCall(
+                    prefixNameNode("prefix ++"),
+                    identNameNode("a"),
+                ),
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                        ++a
-                    """.trimIndent()
-                )
-            ).map { it.first }
+            parseSimple(
+                """
+                    ++a
+                """.trimIndent()
+            )
         )
     }
 
@@ -191,23 +185,17 @@ class ParserTest {
     @Test
     fun `it should parse postfix operator`() {
         assertEquals(
-            Either.Right(
-                Ast.Root(
-                    listOf(
-                        Ast.Child.Expression.FunctionCall(
-                            Ast.Child.Expression.Name("postfix !!"),
-                            Ast.Child.Expression.Name("x"),
-                        ),
-                    )
-                )
+            listOf(
+                Ast.Child.Expression.FunctionCall(
+                    postfixNameNode("postfix !!"),
+                    identNameNode("x"),
+                ),
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                        x!!
-                    """.trimIndent()
-                )
-            ).map { it.first }
+            parseSimple(
+                """
+                    x!!
+                """.trimIndent()
+            )
         )
 
     }
@@ -215,58 +203,65 @@ class ParserTest {
     @Test
     fun `it should parse infix operator`() {
         assertEquals(
-            Either.Right(
-                Ast.Root(
-                    listOf(
-                        Ast.Child.Expression.FunctionCall(
-                            Ast.Child.Expression.FunctionCall(
-                                Ast.Child.Expression.Name("infix +"),
-                                Ast.Child.Expression.Name("a"),
-                            ),
-                            Ast.Child.Expression.Name("b"),
-                        ),
+            listOf(
+                Ast.Child.Expression.FunctionCall(
+                    Ast.Child.Expression.FunctionCall(
+                        infixNameNode("infix +"),
+                        identNameNode("a"),
                     ),
-                )
+                    identNameNode("b"),
+                ),
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                        a + b
-                    """.trimIndent()
-                )
-            ).map { it.first }
+            parseSimple(
+                """
+                    a + b
+                """.trimIndent()
+            )
         )
     }
 
     @Test
     fun `it should parse right associative infix operator`() {
         assertEquals(
-            Either.Right(
-                Ast.Root(
-                    listOf(
+            listOf(
+                Ast.Child.Expression.FunctionCall(
+                    Ast.Child.Expression.FunctionCall(
+                        infixNameNode("infix $"),
+                        identNameNode("println"),
+                    ),
+                    Ast.Child.Expression.FunctionCall(
                         Ast.Child.Expression.FunctionCall(
-                            Ast.Child.Expression.FunctionCall(
-                                Ast.Child.Expression.Name("infix $"),
-                                Ast.Child.Expression.Name("println"),
-                            ),
-                            Ast.Child.Expression.FunctionCall(
-                                Ast.Child.Expression.FunctionCall(
-                                    Ast.Child.Expression.Name("infix +"),
-                                    Ast.Child.Expression.Name("a"),
-                                ),
-                                Ast.Child.Expression.Name("b"),
-                            ),
+                            infixNameNode("infix +"),
+                            identNameNode("a"),
                         ),
+                        identNameNode("b"),
                     ),
                 ),
             ),
-            parseRoot(
-                ParseInput(
-                    """
-                        println $ a + b
-                    """.trimIndent()
-                )
-            ).map { it.first }
+            parseSimple(
+                """
+                    println $ a + b
+                """.trimIndent()
+            )
+        )
+    }
+
+    @Test
+    fun `it should parse tuple, group, or unit`() {
+        assertEquals(
+            listOf(
+                Ast.Child.Expression.Tuple(
+                    listOf(
+                        integerNode("1"),
+                        integerNode("3"),
+                    )
+                ),
+            ),
+            parseSimple(
+                """
+                    ((1), 3)
+                """.trimIndent()
+            )
         )
     }
 }

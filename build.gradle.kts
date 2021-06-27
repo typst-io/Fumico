@@ -1,9 +1,13 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URI
 
 plugins {
     base
-    kotlin("jvm") version "1.5.10" apply false
+    kotlin("jvm") version "1.5.20" apply false
+    id("io.gitlab.arturbosch.detekt") version "1.17.1"
+}
+
+detekt {
+    config = files("$projectDir/config/detekt.yml")
 }
 
 group = "io.typecraft"
@@ -13,6 +17,7 @@ subprojects {
     apply {
         plugin("kotlin")
     }
+
 
     group = rootProject.group
 
