@@ -1,9 +1,10 @@
-package io.typecraft.fumico.core.evaluator
+package io.typecraft.fumico.core.evaluator.expression
 
 import io.typecraft.fumico.core.Ast
 import io.typecraft.fumico.core.FumicoEvaluated
 import io.typecraft.fumico.core.FumicoEvaluationContext
 import io.typecraft.fumico.core.FumicoValue
+import io.typecraft.fumico.core.evaluator.evaluate
 import java.lang.IllegalStateException
 
 fun FumicoEvaluationContext.evaluate(node: Ast.Child.Expression.Name): FumicoEvaluated =
@@ -29,3 +30,27 @@ fun FumicoEvaluationContext.evaluate(node: Ast.Child.Expression.Tuple): FumicoEv
             FumicoValue.Tuple(evaluated)
         )
     }
+
+fun FumicoEvaluationContext.evaluate(node: Ast.Child.Expression.Lambda): FumicoEvaluated {
+    val function = node.arguments.map { it.actual }.ifEmpty { listOf("_") }.foldIndexed(
+        FumicoValue.Function("${'$'}unnamed_lambda_last") { context, _ ->
+            val context1 = if (node.arguments.isEmpty()) {
+                this
+            } else {
+                context
+            }
+            context1.evaluate(node.body).second
+        }
+    ) { index, acc, argumentName ->
+        FumicoValue.Function("${'$'}unnamed_lambda_$argumentName") { context, argument ->
+            val context1 = if (index + 1 == node.arguments.size) {
+                this
+            } else {
+                context
+            }
+            acc.execute(context1.withBinding(argumentName, argument), argument)
+        }
+    }
+
+    return Pair(this, function)
+}

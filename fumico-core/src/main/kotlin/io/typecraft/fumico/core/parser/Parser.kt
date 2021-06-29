@@ -60,5 +60,6 @@ val parseBasicExpression: FumicoParseFunction<Ast.Child.Expression> by lazy {
         parseLiteral,
         parseName,
         parseGroupTuple,
+        parseLambda,
     )
 }

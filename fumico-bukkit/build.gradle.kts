@@ -1,7 +1,7 @@
 import kr.entree.spigradle.kotlin.*
 
 plugins {
-    id("kr.entree.spigradle") version "2.2.3"
+    id("kr.entree.spigradle") version "2.2.4"
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     implementation(paper("1.16.5"))
+    implementation(project(":fumico-core"))
 }
 
 tasks {
@@ -20,6 +21,7 @@ tasks {
         archiveClassifier.set("")
         dependencies {
             include(dependency("org.jetbrains.kotlin::"))
+            include(dependency("io.typecraft::"))
         }
         relocate("kotlin", "io.typecraft.fumico.kotlin")
     }

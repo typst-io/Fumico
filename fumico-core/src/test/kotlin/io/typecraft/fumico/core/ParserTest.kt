@@ -27,8 +27,10 @@ fun identNameNode(name: String): Ast.Child.Expression.Name =
 
 fun prefixNameNode(name: String): Ast.Child.Expression.Name =
     Ast.Child.Expression.Name(Token.Kind.IdentifierPrefix(name))
+
 fun infixNameNode(name: String): Ast.Child.Expression.Name =
     Ast.Child.Expression.Name(Token.Kind.IdentifierInfix(name))
+
 fun postfixNameNode(name: String): Ast.Child.Expression.Name =
     Ast.Child.Expression.Name(Token.Kind.IdentifierPostfix(name))
 
@@ -254,12 +256,48 @@ class ParserTest {
                     listOf(
                         integerNode("1"),
                         integerNode("3"),
+                        Ast.Child.Expression.Tuple(
+                            emptyList()
+                        )
                     )
                 ),
             ),
             parseSimple(
                 """
-                    ((1), 3)
+                    ((1), 3, ())
+                """.trimIndent()
+            )
+        )
+    }
+
+    @Test
+    fun `it should parse lambda`() {
+        assertEquals(
+            listOf(
+                Ast.Child.Expression.Lambda(
+                    emptyList(),
+                    integerNode("1")
+                ),
+                Ast.Child.Expression.Lambda(
+                    listOf(Token.Kind.IdentifierIdentifier("x")),
+                    identNameNode("x")
+                ),
+                Ast.Child.Expression.Lambda(
+                    listOf(Token.Kind.IdentifierIdentifier("x"), Token.Kind.IdentifierIdentifier("y")),
+                    Ast.Child.Expression.FunctionCall(
+                        Ast.Child.Expression.FunctionCall(
+                            infixNameNode("infix +"),
+                            identNameNode("x")
+                        ),
+                        identNameNode("y")
+                    )
+                ),
+            ),
+            parseSimple(
+                """
+                    -> 1
+                    \x -> x
+                    \x y -> x + y
                 """.trimIndent()
             )
         )

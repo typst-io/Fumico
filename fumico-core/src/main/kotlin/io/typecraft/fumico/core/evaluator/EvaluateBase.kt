@@ -4,6 +4,7 @@ import io.typecraft.fumico.core.Ast
 import io.typecraft.fumico.core.FumicoEvaluated
 import io.typecraft.fumico.core.FumicoValue
 import io.typecraft.fumico.core.FumicoEvaluationContext
+import io.typecraft.fumico.core.evaluator.expression.evaluate
 
 fun FumicoEvaluationContext.evaluate(node: Ast.Root): List<FumicoValue> =
     node.children.fold(emptyList<FumicoEvaluated>()) { acc, child ->
@@ -29,4 +30,5 @@ fun FumicoEvaluationContext.evaluate(node: Ast.Child.Expression): FumicoEvaluate
     is Ast.Child.Expression.FunctionCall -> evaluate(node)
     is Ast.Child.Expression.Name -> evaluate(node)
     is Ast.Child.Expression.Tuple -> evaluate(node)
+    is Ast.Child.Expression.Lambda -> evaluate(node)
 }

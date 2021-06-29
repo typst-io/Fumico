@@ -36,7 +36,6 @@ val parseSpecialIdentifier: FumicoParseFunction<Token> = mapResult(takeWhile1 {
         Token.Kind.PunctuationGreaterThanSign,
         Token.Kind.PunctuationQuestionMark,
         Token.Kind.PunctuationCommercialAt,
-        Token.Kind.PunctuationReverseSolidus,
         Token.Kind.PunctuationCircumflexAccent,
         Token.Kind.PunctuationVerticalLine,
         Token.Kind.PunctuationTilde,

@@ -29,6 +29,8 @@ sealed class Ast {
                 data class StringLiteral(val token: Token) : Literal()
             }
 
+            data class Lambda(val arguments: List<Token>, val body: Expression) : Expression()
+
             data class Name(val token: Token) : Expression()
 
             data class FunctionCall(val function: Expression, val argument: Expression) : Expression()

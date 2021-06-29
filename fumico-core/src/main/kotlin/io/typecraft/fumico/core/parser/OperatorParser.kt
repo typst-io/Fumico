@@ -141,7 +141,12 @@ val parsePrefixOperatorExpression: FumicoParseFunction<Ast.Child.Expression> by 
     mapResult(
         tuple(
             defaulting(
-                separatedList(parseSpecialIdentifier, skipHorizontalSpaces),
+                separatedList(
+                    filter(parseSpecialIdentifier) {
+                        it.actual != "->"
+                    },
+                    skipHorizontalSpaces
+                ),
                 emptyList()
             ),
             skipHorizontalSpaces,

@@ -7,7 +7,7 @@ import io.typecraft.fumico.core.FumicoValue
 
 fun FumicoEvaluationContext.evaluate(node: Ast.Child.Statement.FunctionDeclaration): FumicoEvaluated {
     val function = node.arguments.map { it.actual }.ifEmpty { listOf("_") }.foldIndexed(
-        FumicoValue.Function("${node.name}_lambda_last") { context, _ ->
+        FumicoValue.Function("${'$'}${node.name}_lambda_last") { context, _ ->
             val context1 = if (node.arguments.isEmpty()) {
                 this
             } else {
@@ -16,7 +16,7 @@ fun FumicoEvaluationContext.evaluate(node: Ast.Child.Statement.FunctionDeclarati
             context1.evaluate(node.body).second
         }
     ) { index, acc, argumentName ->
-        FumicoValue.Function("${node.name}_lambda_$argumentName") { context, argument ->
+        FumicoValue.Function("${'$'}${node.name}_lambda_$argumentName") { context, argument ->
             val context1 = if (index + 1 == node.arguments.size) {
                 this
             } else {

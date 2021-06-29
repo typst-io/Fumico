@@ -1,4 +1,4 @@
-package io.typecraft.fumico.core.evaluator
+package io.typecraft.fumico.core.evaluator.expression
 
 import io.typecraft.fumico.core.Ast
 import io.typecraft.fumico.core.FumicoEvaluated
