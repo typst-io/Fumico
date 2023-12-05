@@ -26,10 +26,17 @@ fun <Value> createToken(
     kind: Token.Kind,
     f: FumicoTokenizeFunction<Value>,
     mapper: (Value) -> String,
+): FumicoTokenizeFunction<Token> = createToken({ kind }, f, mapper)
+
+fun <Value> createToken(
+    kind: (String) -> Token.Kind,
+    f: FumicoTokenizeFunction<Value>,
+    mapper: (Value) -> String,
 ): FumicoTokenizeFunction<Token> = { input ->
     f(input).flatMap { (value, input1) ->
         val begin = Span.LineColumn(input.start, input.meta.line, input.meta.lastOffset)
         val end = Span.LineColumn(input1.start, input1.meta.line, input1.meta.lastOffset)
-        ParseResult.Ok(Token(kind, mapper(value), Span(begin, end)), input1)
+        val mapped = mapper(value)
+        ParseResult.Ok(Token(kind(mapped), mapped, Span(begin, end)), input1)
     }
 }

@@ -302,4 +302,33 @@ class ParserTest {
             )
         )
     }
+
+    @Test
+    fun `it should parse if else`() {
+        assertEquals(
+            listOf(
+                Ast.Child.Expression.If(
+                    identNameNode("true"),
+                    integerNode("1"),
+                    integerNode("2")
+                ),
+                Ast.Child.Expression.If(
+                    identNameNode("true"),
+                    integerNode("1"),
+                    null
+                ),
+            ),
+            parseSimple(
+                """
+                    if true ->
+                        1
+                    else ->
+                        2
+
+                    if true ->
+                        1
+                """.trimIndent()
+            )
+        )
+    }
 }

@@ -13,6 +13,9 @@ data class Token(val kind: Kind, val visual: String, val actual: String, val spa
         IdentifierInfix,
         IdentifierPostfix,
 
+        KeywordIf,
+        KeywordElse,
+
         Punctuations,
 
         PunctuationExclamationMark,

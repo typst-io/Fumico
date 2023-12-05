@@ -11,7 +11,12 @@ val parsePostfixOperatorExpression: FumicoParseFunction<Ast.Child.Expression> by
             parseInfixOperatorExpressionWithPrecedence,
             skipHorizontalSpaces,
             defaulting(
-                separatedList(parseSpecialIdentifier, skipHorizontalSpaces),
+                separatedList(
+                    filter(parseSpecialIdentifier) {
+                        it.actual != "->"
+                    },
+                    skipHorizontalSpaces
+                ),
                 emptyList()
             )
         )
@@ -122,7 +127,8 @@ fun createInfixOperatorParser(
         }
         val (_, input2) = skipHorizontalSpaces(input1)
         val (operator, input3) = filter(parseSpecialIdentifier) { s ->
-            s.actual.firstOrNull()?.let { it in begin } == true
+            s.actual.firstOrNull()?.let { it in begin } == true &&
+                    s.actual != "->"
         }(input2).unwrapOr {
             return buildResult(acc + Pair(lhs, null), input1)
         }

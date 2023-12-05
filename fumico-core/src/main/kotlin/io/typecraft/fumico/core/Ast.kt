@@ -31,6 +31,8 @@ sealed class Ast {
 
             data class Lambda(val arguments: List<Token>, val body: Expression) : Expression()
 
+            data class If(val cond: Expression, val then: Expression, val otherwise: Expression?) : Expression()
+
             data class Name(val token: Token) : Expression()
 
             data class FunctionCall(val function: Expression, val argument: Expression) : Expression()

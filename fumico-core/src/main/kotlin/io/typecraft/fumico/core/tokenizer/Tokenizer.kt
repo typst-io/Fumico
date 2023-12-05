@@ -16,6 +16,7 @@ val tokenize: FumicoTokenizeFunction<List<Token>> by lazy {
 
             tokenizePunctuation,
 
+            tokenizeIdentifierPlaceholderName,
             tokenizeIdentifierIdentifier,
             tokenizeIdentifierPrefix,
             tokenizeIdentifierInfix,
@@ -158,9 +159,19 @@ val tokenizePunctuations: FumicoTokenizeFunction<List<Char>> by lazy {
     takeWhile1 { it in punctuationMap }
 }
 
+val keywordMap = mapOf(
+    "if" to Token.Kind.KeywordIf,
+    "else" to Token.Kind.KeywordElse,
+)
+
 val tokenizeIdentifierIdentifier: FumicoTokenizeFunction<Token> =
     createToken(
-        Token.Kind.IdentifierIdentifier,
+        {
+            when (it) {
+                in keywordMap -> keywordMap[it]!!
+                else -> Token.Kind.IdentifierIdentifier
+            }
+        },
         filter(
             mapResult(
                 concatWithFlatten(
@@ -193,6 +204,15 @@ val tokenizeIdentifierIdentifier: FumicoTokenizeFunction<Token> =
         }
     ) {
         it
+    }
+
+
+val tokenizeIdentifierPlaceholderName: FumicoTokenizeFunction<Token> =
+    createToken(
+        Token.Kind.IdentifierPlaceholderName,
+        tag('_')
+    ) {
+        it.toString()
     }
 
 val tokenizeIdentifierPrefix: FumicoTokenizeFunction<Token> =

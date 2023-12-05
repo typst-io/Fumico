@@ -115,3 +115,111 @@ inline fun <Meta, Token, A, B, C, D, E, F, G> tuple(
 
     ParseResult.Ok(Tuple7(a, b, c, d, e, f, g), input7)
 }
+
+data class Tuple8<A, B, C, D, E, F, G, H>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D,
+    val fifth: E,
+    val sixth: F,
+    val seventh: G,
+    val eighth: H,
+)
+
+inline fun <Meta, Token, A, B, C, D, E, F, G, H> tuple(
+    crossinline f0: ParseFunction<Meta, Token, A>,
+    crossinline f1: ParseFunction<Meta, Token, B>,
+    crossinline f2: ParseFunction<Meta, Token, C>,
+    crossinline f3: ParseFunction<Meta, Token, D>,
+    crossinline f4: ParseFunction<Meta, Token, E>,
+    crossinline f5: ParseFunction<Meta, Token, F>,
+    crossinline f6: ParseFunction<Meta, Token, G>,
+    crossinline f7: ParseFunction<Meta, Token, H>,
+): ParseFunction<Meta, Token, Tuple8<A, B, C, D, E, F, G, H>> = body@{ input ->
+    val (a, input1) = f0(input).unwrapOr { return@body it.into() }
+    val (b, input2) = f1(input1).unwrapOr { return@body it.into() }
+    val (c, input3) = f2(input2).unwrapOr { return@body it.into() }
+    val (d, input4) = f3(input3).unwrapOr { return@body it.into() }
+    val (e, input5) = f4(input4).unwrapOr { return@body it.into() }
+    val (f, input6) = f5(input5).unwrapOr { return@body it.into() }
+    val (g, input7) = f6(input6).unwrapOr { return@body it.into() }
+    val (h, input8) = f7(input7).unwrapOr { return@body it.into() }
+
+    ParseResult.Ok(Tuple8(a, b, c, d, e, f, g, h), input8)
+}
+
+data class Tuple9<A, B, C, D, E, F, G, H, I>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D,
+    val fifth: E,
+    val sixth: F,
+    val seventh: G,
+    val eighth: H,
+    val ninth: I,
+)
+
+inline fun <Meta, Token, A, B, C, D, E, F, G, H, I> tuple(
+    crossinline f0: ParseFunction<Meta, Token, A>,
+    crossinline f1: ParseFunction<Meta, Token, B>,
+    crossinline f2: ParseFunction<Meta, Token, C>,
+    crossinline f3: ParseFunction<Meta, Token, D>,
+    crossinline f4: ParseFunction<Meta, Token, E>,
+    crossinline f5: ParseFunction<Meta, Token, F>,
+    crossinline f6: ParseFunction<Meta, Token, G>,
+    crossinline f7: ParseFunction<Meta, Token, H>,
+    crossinline f8: ParseFunction<Meta, Token, I>,
+): ParseFunction<Meta, Token, Tuple9<A, B, C, D, E, F, G, H, I>> = body@{ input ->
+    val (a, input1) = f0(input).unwrapOr { return@body it.into() }
+    val (b, input2) = f1(input1).unwrapOr { return@body it.into() }
+    val (c, input3) = f2(input2).unwrapOr { return@body it.into() }
+    val (d, input4) = f3(input3).unwrapOr { return@body it.into() }
+    val (e, input5) = f4(input4).unwrapOr { return@body it.into() }
+    val (f, input6) = f5(input5).unwrapOr { return@body it.into() }
+    val (g, input7) = f6(input6).unwrapOr { return@body it.into() }
+    val (h, input8) = f7(input7).unwrapOr { return@body it.into() }
+    val (i, input9) = f8(input8).unwrapOr { return@body it.into() }
+
+    ParseResult.Ok(Tuple9(a, b, c, d, e, f, g, h, i), input9)
+}
+
+data class Tuple10<A, B, C, D, E, F, G, H, I, J>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D,
+    val fifth: E,
+    val sixth: F,
+    val seventh: G,
+    val eighth: H,
+    val ninth: I,
+    val tenth: J,
+)
+
+inline fun <Meta, Token, A, B, C, D, E, F, G, H, I, J> tuple(
+    crossinline f0: ParseFunction<Meta, Token, A>,
+    crossinline f1: ParseFunction<Meta, Token, B>,
+    crossinline f2: ParseFunction<Meta, Token, C>,
+    crossinline f3: ParseFunction<Meta, Token, D>,
+    crossinline f4: ParseFunction<Meta, Token, E>,
+    crossinline f5: ParseFunction<Meta, Token, F>,
+    crossinline f6: ParseFunction<Meta, Token, G>,
+    crossinline f7: ParseFunction<Meta, Token, H>,
+    crossinline f8: ParseFunction<Meta, Token, I>,
+    crossinline f9: ParseFunction<Meta, Token, J>,
+): ParseFunction<Meta, Token, Tuple10<A, B, C, D, E, F, G, H, I, J>> = body@{ input ->
+    val (a, input1) = f0(input).unwrapOr { return@body it.into() }
+    val (b, input2) = f1(input1).unwrapOr { return@body it.into() }
+    val (c, input3) = f2(input2).unwrapOr { return@body it.into() }
+    val (d, input4) = f3(input3).unwrapOr { return@body it.into() }
+    val (e, input5) = f4(input4).unwrapOr { return@body it.into() }
+    val (f, input6) = f5(input5).unwrapOr { return@body it.into() }
+    val (g, input7) = f6(input6).unwrapOr { return@body it.into() }
+    val (h, input8) = f7(input7).unwrapOr { return@body it.into() }
+    val (i, input9) = f8(input8).unwrapOr { return@body it.into() }
+    val (j, input10) = f9(input9).unwrapOr { return@body it.into() }
+
+    ParseResult.Ok(Tuple10(a, b, c, d, e, f, g, h, i, j), input10)
+}
